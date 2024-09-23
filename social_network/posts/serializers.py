@@ -1,35 +1,37 @@
 from rest_framework import serializers
-
-from posts.models import Comment, Post, PostImage
+from posts.models import Post, Comment,Like
 
 
 class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
-        fields = ['author', 'text', 'created_at']
+        fields = ['id', 'user','post','text', 'created_at']
+        read_only_fields = ['user',]
 
-
-class CommentPostSerializer(serializers.ModelSerializer):
+class LikeSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Comment
-        fields = ['id', 'text', 'created_at']
-
-
-class ImagesPostSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = PostImage
-        fields = ['post', 'image']
-
+        model = Like
+        fields = ['id', 'user','type','post']
+        read_only_fields = ['user',]        
 
 class PostSerializer(serializers.ModelSerializer):
-    comments = CommentSerializer(many=True, read_only=True)
-    images = ImagesPostSerializer(many=True, read_only=True)
-
     class Meta:
         model = Post
-        fields = ['id', 'text', 'images', 'created_at', 'comments']
+        fields = ['id', 'user', 'text', 'created_at','image', 'type']
+        read_only_fields = ['user',]
 
-    def to_representation(self, post):
-        representation = super().to_representation(post)
-        representation['likes_count'] = post.likes.count()
+class PostDetailsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Post
+        fields = ['id', 'user', 'text', 'created_at','image', 'type']
+        read_only_fields = ['user',]
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['comments'] = list(
+            [CommentSerializer(rew).data for rew in Comment.objects.filter(post=instance)]
+        )
+        representation['likes_count'] = Like.objects.filter(post=instance).count()
         return representation
+        
+    

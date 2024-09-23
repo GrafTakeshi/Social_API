@@ -1,51 +1,34 @@
-from django.contrib.auth import get_user_model
 from django.db import models
+from django.contrib.auth import get_user_model
+
 
 User = get_user_model()
+FEEDBACK_OPTIONS = (
+    ('L', 'Like'),
+    ('D', 'Dislike'),
+)
 
+COMMENT_OPTIONS = (
+    ('Y', 'Comment'),
+    ('N', 'NoComment'),
+)
 
 class Post(models.Model):
-    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey (User,on_delete = models.CASCADE)
     text = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f'{self.author.username}-{self.text[:50]}'
-
-
-class PostImage(models.Model):
-    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='images')
-    image = models.ImageField(upload_to='photos')
+    created_at = models.DateField(auto_now_add=True)
+    image = models.ImageField (upload_to="photos",null=True)
+    type = models.CharField(max_length=1, choices=COMMENT_OPTIONS)
 
 
 class Like(models.Model):
-    post = models.ForeignKey(
-        Post,
-        on_delete=models.CASCADE,
-        related_name='likes'
-    )
-    author = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='likes'
-    )
-
-    def __str__(self):
-        return f'{self.author.username} liked {self.post}'
+    user = models.ForeignKey (User,on_delete = models.CASCADE)
+    type = models.CharField(max_length=1, choices=FEEDBACK_OPTIONS)
+    post = models.ForeignKey(Post, on_delete=models.CASCADE)
 
 
 class Comment(models.Model):
-    post = models.ForeignKey(
-        Post,
-        on_delete=models.CASCADE,
-        related_name='comments'
-    )
-    author = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE
-    )
+    user = models.ForeignKey (User,on_delete = models.CASCADE)
+    post = models.ForeignKey (Post, on_delete = models.CASCADE)
     text = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f'{self.author.username}-{self.text[:50]}'
+    created_at = models.DateField(auto_now_add=True)
